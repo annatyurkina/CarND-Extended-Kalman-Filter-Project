@@ -88,6 +88,21 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
      * Update the process noise covariance matrix.
      * Use noise_ax = 9 and noise_ay = 9 for your Q matrix.
    */
+  int noise_ax = 9;
+  int noise_ay = 9;
+  int dt = measurement_pack.timestamp_ - previous_timestamp_;
+  ekf_.F_(0, 2) = dt;
+  ekf_.F_(1, 3) = dt;
+  int pow_2 = dt * dt;
+  int pow_3 = pow_2 * dt;
+  int pow_4 = pow_3 * dt;
+  float Q_2_4 = pow_3 * noise_ay / 2.0;
+  float Q_1_3 = pow_3 * noise_ax / 2.0;
+  ekf_.Q_ << pow_4 * noise_ax / 4.0, 0, Q_1_3, 0,
+	  0, pow_4 * noise_ay / 4.0, 0, Q_2_4,
+	  Q_1_3, 0, pow_2 * noise_ax, 0,
+	  0, Q_2_4, 0, pow_2 * noise_ay;
+  previous_timestamp_ = measurement_pack.timestamp_;
 
   ekf_.Predict();
 
