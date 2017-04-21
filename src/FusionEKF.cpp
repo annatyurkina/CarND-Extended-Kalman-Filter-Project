@@ -90,7 +90,7 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
    */
   int noise_ax = 9;
   int noise_ay = 9;
-  int dt = measurement_pack.timestamp_ - previous_timestamp_;
+  int dt = (measurement_pack.timestamp_ - previous_timestamp_)/1000000.0;
   ekf_.F_(0, 2) = dt;
   ekf_.F_(1, 3) = dt;
   int pow_2 = dt * dt;
