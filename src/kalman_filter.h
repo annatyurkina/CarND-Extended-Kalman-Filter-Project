@@ -33,6 +33,8 @@ public:
    */
   virtual ~KalmanFilter();
 
+  Tools tools_;
+
   /**
    * Init Initializes Kalman filter
    * @param x_in Initial state
