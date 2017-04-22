@@ -1,5 +1,6 @@
 #include "kalman_filter.h"
 #include <math.h>
+#include <iostream>
 
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
@@ -21,6 +22,11 @@ void KalmanFilter::Init(VectorXd &x_in, MatrixXd &P_in, MatrixXd &F_in,
 void KalmanFilter::Predict() {  	
 		x_ = F_ * x_;
 		P_ = F_ * P_ * F_.transpose() + Q_;
+
+		/*std::cout << "PREDICT" << std::endl;
+		std::cout << "x=" << std::endl << x_ << std::endl;
+		std::cout << "P=" << std::endl << P_ << std::endl;
+		std::cout << "END PREDICT" << std::endl;*/
 }
 
 void KalmanFilter::Update(const VectorXd &z) {  
@@ -35,19 +41,27 @@ void KalmanFilter::Update(const VectorXd &z) {
 
 void KalmanFilter::UpdateEKF(const VectorXd &z) {	
 		VectorXd h_x(3);	
-		float c1 = sqrt(x_[0]*x_[0] + x_[1]*x_[1]);
-		float c2 = atan(_x[1]/x_[0]);
-		while(c2 < -PI || c2 > PI){
-			float increment = c2 > 0 ? -2*PI : 2*PI;
-			c2 += increment;
-		}
-		h_x << c1, c2, (x_[0]*x_[2] + x_[1]*x_[4])/c1;
+		double c1 = sqrt(x_[0]*x_[0] + x_[1]*x_[1]);
+		double c2 = atan2(x_[1], x_[0]);
+		h_x << c1, c2, (x_[0]*x_[2] + x_[1]*x_[3])/c1;
 		VectorXd y = z - h_x;
-		Hj = tools_.CalculateJacobian(x_);
+		while (y(1) < -M_PI || y(1) > M_PI) {
+			double increment = y(1) > 0 ? -2 * M_PI : 2 * M_PI;
+			y(1) += increment;
+		}
+		MatrixXd Hj = tools_.CalculateJacobian(x_);
 		MatrixXd S = Hj * P_ * Hj.transpose() + R_;
 		MatrixXd K = P_ * Hj.transpose() * S.inverse();
 		x_ = x_ + (K * y);
 		long x_size = x_.size();
 		MatrixXd I = MatrixXd::Identity(x_size, x_size);
 		P_ = (I - (K * Hj)) * P_;
+		/*std::cout << "UPDATE" << std::endl;
+		std::cout << "y=" << std::endl << y << std::endl;
+		std::cout << "Hj=" << std::endl << Hj << std::endl;
+		std::cout << "S=" << std::endl << S << std::endl;
+		std::cout << "K=" << std::endl << K << std::endl;
+		std::cout << "x=" << std::endl << x_ << std::endl;
+		std::cout << "P=" << std::endl << P_ << std::endl;
+		std::cout << "END UPDATE" << std::endl;*/
 }
