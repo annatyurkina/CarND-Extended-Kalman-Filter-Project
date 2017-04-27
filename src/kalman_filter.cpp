@@ -42,13 +42,11 @@ void KalmanFilter::Update(const VectorXd &z) {
 void KalmanFilter::UpdateEKF(const VectorXd &z) {	
 		VectorXd h_x(3);	
 		double c1 = sqrt(x_[0]*x_[0] + x_[1]*x_[1]);
-		double c2 = atan2(x_[1], x_[0]);
-		h_x << c1, c2, (x_[0]*x_[2] + x_[1]*x_[3])/c1;
+		double c2 = (x_[1] != 0 && x_[0] != 0) ? atan2(x_[1], x_[0]) : 0;
+		const double epsilon = 0.00001;
+		h_x << c1, c2, (x_[0]*x_[2] + x_[1]*x_[3])/std::max(c1, epsilon);
 		VectorXd y = z - h_x;
-		while (y(1) < -M_PI || y(1) > M_PI) {
-			double increment = y(1) > 0 ? -2 * M_PI : 2 * M_PI;
-			y(1) += increment;
-		}
+		KalmanFilter::NormaliseAngle(y(1));
 		MatrixXd Hj = tools_.CalculateJacobian(x_);
 		MatrixXd S = Hj * P_ * Hj.transpose() + R_;
 		MatrixXd K = P_ * Hj.transpose() * S.inverse();
@@ -64,4 +62,11 @@ void KalmanFilter::UpdateEKF(const VectorXd &z) {
 		std::cout << "x=" << std::endl << x_ << std::endl;
 		std::cout << "P=" << std::endl << P_ << std::endl;
 		std::cout << "END UPDATE" << std::endl;*/
+}
+
+void KalmanFilter::NormaliseAngle(double &angle) {
+	while (angle < -M_PI || angle > M_PI) {
+		double increment = angle > 0 ? -2 * M_PI : 2 * M_PI;
+		angle += increment;
+	}
 }

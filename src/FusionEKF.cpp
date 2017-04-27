@@ -61,7 +61,8 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
     if (measurement_pack.sensor_type_ == MeasurementPackage::RADAR) {
 		double rho = measurement_pack.raw_measurements_[0];
 		double phi = measurement_pack.raw_measurements_[1];
-		ekf_.x_ << rho * cos(phi), rho * sin(phi), 0, 0;
+		double rho_dot = measurement_pack.raw_measurements_[2];
+		ekf_.x_ << rho * cos(phi), rho * sin(phi), rho_dot * cos(phi), rho_dot * sin(phi);
     }
     else if (measurement_pack.sensor_type_ == MeasurementPackage::LASER) {
 		ekf_.x_ << measurement_pack.raw_measurements_[0], measurement_pack.raw_measurements_[1], 0, 0;
@@ -101,11 +102,11 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
   double dt = (measurement_pack.timestamp_ - previous_timestamp_)/1000000.0;
   ekf_.F_(0, 2) = dt;
   ekf_.F_(1, 3) = dt;
-  double pow_2 = dt * dt;
-  double pow_3 = pow_2 * dt;
-  double pow_4 = pow_3 * dt;
-  double Q_2_4 = pow_3 * noise_ay / 2.0;
-  double Q_1_3 = pow_3 * noise_ax / 2.0;
+  const double pow_2 = dt * dt;
+  const double pow_3 = pow_2 * dt;
+  const double pow_4 = pow_3 * dt;
+  const double Q_2_4 = pow_3 * noise_ay / 2.0;
+  const double Q_1_3 = pow_3 * noise_ax / 2.0;
   ekf_.Q_ << pow_4 * noise_ax / 4.0, 0, Q_1_3, 0,
 	  0, pow_4 * noise_ay / 4.0, 0, Q_2_4,
 	  Q_1_3, 0, pow_2 * noise_ax, 0,

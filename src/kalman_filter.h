@@ -24,6 +24,9 @@ public:
   // measurement covariance matrix
   Eigen::MatrixXd R_;
 
+  // identity matrix
+  Eigen::MatrixXd I_;
+
   /**
    * Constructor
    */
@@ -66,6 +69,12 @@ public:
    * @param z The measurement at k+1
    */
   void UpdateEKF(const Eigen::VectorXd &z);
+
+  /**
+  * Sets angle to [-M_PI; M_PI] by subtracting or adding 2*M_PI
+  * @param z The measurement at k+1
+  */
+  void NormaliseAngle(double &angle);
 
 };
 
